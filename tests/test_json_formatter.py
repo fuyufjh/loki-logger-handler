@@ -1,7 +1,7 @@
 import unittest
 import json
 import logging
-from loki_logger_handler.formatters.json_formatter import JsonFormatter
+from loki_logging_handler.formatters.json_formatter import JsonFormatter
 
 class TestJsonFormatter(unittest.TestCase):
     def setUp(self):

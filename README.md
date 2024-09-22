@@ -1,12 +1,12 @@
-# loki_logger_handler
+# loki_logging_handler
 
 A logging handler that sends log messages to Loki in text or JSON format.
 
 ## Features
 
+* Buffer logs in memory and send to Loki in batch
 * Logs pushed in text or JSON format
 * Logger extra keys added automatically as keys into pushed JSON
-* Publish in batch of Streams
 * Publish logs compressed
 
 ## Args
@@ -26,7 +26,7 @@ A logging handler that sends log messages to Loki in text or JSON format.
 ## Quick start
 
 ```python
-from loki_logger_handler.loki_logger_handler import LokiLoggerHandler,
+from loki_logging_handler.loki_logging_handler import LokiLoggerHandler,
 import logging
 import os 
 

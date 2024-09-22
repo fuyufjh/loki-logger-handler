@@ -2,9 +2,9 @@ import queue
 import unittest
 from unittest.mock import patch, MagicMock
 import logging
-from loki_logger_handler.loki_client import LokiClient
-from loki_logger_handler.loki_logger_handler import LokiLoggerHandler, BufferEntry
-from loki_logger_handler.models import Stream, LokiRequest, LogEntry
+from loki_logging_handler.loki_client import LokiClient
+from loki_logging_handler.loki_handler import LokiHandler, BufferEntry
+from loki_logging_handler.models import Stream, LokiRequest, LogEntry
 
 class TestLokiLoggerHandler(unittest.TestCase):
 
@@ -12,7 +12,7 @@ class TestLokiLoggerHandler(unittest.TestCase):
         self.url = "http://loki.example.com"
         self.labels = {"app": "test_app", "environment": "testing"}
         self.auth = ("test_user_id", "test_api_key")
-        self.handler = LokiLoggerHandler(self.url, self.labels, auth=self.auth)
+        self.handler = LokiHandler(self.url, self.labels, auth=self.auth)
 
     def test_init(self):
         self.assertEqual(self.handler.labels, self.labels)
@@ -21,7 +21,7 @@ class TestLokiLoggerHandler(unittest.TestCase):
         self.assertIsInstance(self.handler.loki_client, LokiClient)
         self.assertIsInstance(self.handler.buffer, queue.Queue)
 
-    @patch('loki_logger_handler.loki_logger_handler.BufferEntry')
+    @patch('loki_logging_handler.loki_handler.BufferEntry')
     def test_emit(self, mock_buffer_entry):
         record = logging.LogRecord(
             name="test_logger",
@@ -40,7 +40,7 @@ class TestLokiLoggerHandler(unittest.TestCase):
             mock_buffer_entry.assert_called_once_with(1234567890.0, "INFO", "Test message")
             mock_put.assert_called_once()
 
-    @patch('loki_logger_handler.loki_logger_handler.LokiClient.send')
+    @patch('loki_logging_handler.loki_client.LokiClient.send')
     def test_flush(self, mock_send):
         # Add some test entries to the buffer
         self.handler.buffer.put(BufferEntry(1234567890.0, "INFO", "Test message 1"))
@@ -80,21 +80,21 @@ class TestLokiLoggerHandler(unittest.TestCase):
         self.assertEqual(request_arg.serialize(), expected_serialized)
 
     def test_flush_empty_buffer(self):
-        with patch('loki_logger_handler.loki_logger_handler.LokiClient.send') as mock_send:
+        with patch('loki_logging_handler.loki_client.LokiClient.send') as mock_send:
             self.handler.flush()
             mock_send.assert_not_called()
 
     def test_init_with_auth(self):
-        handler = LokiLoggerHandler(self.url, self.labels, auth=self.auth)
+        handler = LokiHandler(self.url, self.labels, auth=self.auth)
         self.assertEqual(handler.loki_client.headers["Authorization"], f"Bearer {self.auth[0]}:{self.auth[1]}")
 
     def test_init_without_auth(self):
-        handler = LokiLoggerHandler(self.url, self.labels)
+        handler = LokiHandler(self.url, self.labels)
         self.assertNotIn("Authorization", handler.loki_client.headers)
 
     def test_init_with_additional_headers(self):
         additional_headers = {"X-Custom-Header": "CustomValue", "X-Another-Header": "AnotherValue"}
-        handler = LokiLoggerHandler(self.url, self.labels, additional_headers=additional_headers)
+        handler = LokiHandler(self.url, self.labels, additional_headers=additional_headers)
         
         for key, value in additional_headers.items():
             self.assertIn(key, handler.loki_client.headers)
@@ -106,7 +106,7 @@ class TestLokiLoggerHandler(unittest.TestCase):
 
     def test_init_additional_headers_dont_override_defaults(self):
         additional_headers = {"Content-type": "text/plain"}
-        handler = LokiLoggerHandler(self.url, self.labels, additional_headers=additional_headers)
+        handler = LokiHandler(self.url, self.labels, additional_headers=additional_headers)
         
         # Ensure the default Content-type header is not overridden
         self.assertIn("Content-type", handler.loki_client.headers)

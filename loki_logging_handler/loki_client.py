@@ -2,7 +2,7 @@ import requests
 import gzip
 from typing import Dict, Optional, Tuple
 
-from loki_logger_handler.models import LokiRequest
+from loki_logging_handler.models import LokiRequest
 
 
 class LokiClient:

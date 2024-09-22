@@ -3,8 +3,8 @@ import threading
 import time
 import logging
 import atexit
-from loki_logger_handler.loki_client import LokiClient
-from loki_logger_handler.models import Stream, LokiRequest, LogEntry
+from loki_logging_handler.loki_client import LokiClient
+from loki_logging_handler.models import Stream, LokiRequest, LogEntry
 from typing import Optional, Tuple, override
 from typing import Dict
 
@@ -16,7 +16,7 @@ class BufferEntry:
         self.message = message
 
 
-class LokiLoggerHandler(logging.Handler):
+class LokiHandler(logging.Handler):
     def __init__(
         self,
         url,
