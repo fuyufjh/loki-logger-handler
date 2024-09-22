@@ -17,7 +17,7 @@ A logging handler that sends log messages to Loki in text or JSON format.
 * `buffer_timeout` (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
 * `buffer_size_threshold` (int, optional): The number of log messages to buffer before flushing. Defaults to 10000.
 * `compressed` (bool, optional): Whether to compress the log messages before sending them to Loki. Defaults to `True`.
-* `defaultFormatter` (logging.Formatter, optional): The formatter to use for log messages. Defaults to `PlainFormatter`.
+* `formatter` (optional): The formatter to use for log messages. Defaults to `logging.Formatter`.
 
 ## Formatters
 
