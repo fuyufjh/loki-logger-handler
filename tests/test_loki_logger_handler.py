@@ -87,5 +87,26 @@ class TestLokiLoggerHandler(unittest.TestCase):
         handler = LokiLoggerHandler(self.url, self.labels)
         self.assertNotIn("Authorization", handler.loki_client.headers)
 
+    def test_init_with_additional_headers(self):
+        additional_headers = {"X-Custom-Header": "CustomValue", "X-Another-Header": "AnotherValue"}
+        handler = LokiLoggerHandler(self.url, self.labels, additional_headers=additional_headers)
+        
+        for key, value in additional_headers.items():
+            self.assertIn(key, handler.loki_client.headers)
+            self.assertEqual(handler.loki_client.headers[key], value)
+        
+        # Ensure the default Content-type header is still present
+        self.assertIn("Content-type", handler.loki_client.headers)
+        self.assertEqual(handler.loki_client.headers["Content-type"], "application/json")
+
+    def test_init_additional_headers_dont_override_defaults(self):
+        additional_headers = {"Content-type": "text/plain"}
+        handler = LokiLoggerHandler(self.url, self.labels, additional_headers=additional_headers)
+        
+        # Ensure the default Content-type header is not overridden
+        self.assertIn("Content-type", handler.loki_client.headers)
+        self.assertEqual(handler.loki_client.headers["Content-type"], "application/json")
+
+
 if __name__ == '__main__':
     unittest.main()
