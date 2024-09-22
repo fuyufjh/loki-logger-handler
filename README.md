@@ -27,7 +27,7 @@ A logging handler that sends log messages to Loki in text or JSON format.
 ## Quick start
 
 ```python
-from loki_logging_handler.loki_logging_handler import LokiLoggerHandler,
+from loki_logging_handler.loki_handler import LokiHandler
 import logging
 import os 
 
@@ -36,7 +36,7 @@ logger = logging.getLogger("custom_logger")
 logger.setLevel(logging.DEBUG)
 
 # Create an instance of the custom handler
-custom_handler = LokiLoggerHandler(
+custom_handler = LokiHandler(
     url=os.environ["LOKI_URL"],
     labels={"application": "Test", "envornment": "Develop"},
     auth=(os.environ["LOKI_USER_ID"], os.environ["LOKI_API_KEY"]),
