@@ -1,7 +1,9 @@
 import traceback
+import logging
+import json
+from . import Formatter
 
-
-class LoggerFormatter:
+class LoggerFormatter(Formatter):
     LOG_RECORD_FIELDS = {
         "msg",
         "levelname",
@@ -28,7 +30,7 @@ class LoggerFormatter:
     def __init__(self):
         pass
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         formatted = {
             "message": record.getMessage(),
             "timestamp": record.created,
@@ -52,4 +54,4 @@ class LoggerFormatter:
             formatted["line"] = record.lineno
             formatted["stacktrace"] = traceback.format_exc()
 
-        return formatted
+        return json.dumps(formatted)

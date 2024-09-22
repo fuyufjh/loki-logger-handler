@@ -3,11 +3,18 @@ import threading
 import time
 import logging
 import atexit
-from loki_logger_handler.formatters.logger_formatter import LoggerFormatter
-from loki_logger_handler.formatters.loguru_formatter import LoguruFormatter
-from loki_logger_handler.streams import Streams
-from loki_logger_handler.loki_request import LokiRequest
-from loki_logger_handler.stream import Stream
+from loki_logger_handler.formatters.plain_formatter import PlainFormatter
+from loki_logger_handler.loki_client import LokiClient
+from loki_logger_handler.models import Stream, LokiRequest, LogEntry
+from typing import override
+from typing import Dict
+
+
+class BufferEntry:
+    def __init__(self, timestamp: float, level: str, message: str):
+        self.timestamp = timestamp
+        self.level = level
+        self.message = message
 
 
 class LokiLoggerHandler(logging.Handler):
@@ -17,7 +24,7 @@ class LokiLoggerHandler(logging.Handler):
         labels,
         timeout=10,
         compressed=True,
-        defaultFormatter=LoggerFormatter(),
+        defaultFormatter=PlainFormatter(),
         additional_headers=dict()
     ):
         super().__init__()
@@ -25,55 +32,44 @@ class LokiLoggerHandler(logging.Handler):
         self.labels = labels
         self.timeout = timeout
         self.logger_formatter = defaultFormatter
-        self.request = LokiRequest(url=url, compressed=compressed, additional_headers=additional_headers)
-        self.buffer = queue.Queue()
-        self.flush_thread = threading.Thread(target=self._flush, daemon=True)
+        self.loki_client = LokiClient(url=url, compressed=compressed, additional_headers=additional_headers)
+        self.buffer: queue.Queue[BufferEntry] = queue.Queue()
+        
+        self.flush_lock = threading.Lock()
+        self.flush_thread = threading.Thread(target=self.flush_loop, daemon=True)
         self.flush_thread.start()
 
-    def emit(self, record):
-        self._put(self.logger_formatter.format(record))
+        atexit.register(self.flush)
 
-    def _flush(self):
-        atexit.register(self._send)
+    @override
+    def emit(self, record: logging.LogRecord):
+        self.buffer.put(BufferEntry(record.created, record.levelname, record.getMessage()))
 
-        flushing = False
+    def flush_loop(self):
         while True:
-            if not flushing and not self.buffer.empty():
-                flushing = True
-                self._send()
-                flushing = False
+            if not self.buffer.empty():                
+                self.flush()
             else:
                 time.sleep(self.timeout)
 
-    def _send(self):
-        temp_streams = {}
+    def flush(self):
+        with self.flush_lock:
+            streams: Dict[str, Stream] = dict() # log level -> stream
 
-        while not self.buffer.empty():
-            log = self.buffer.get()
-            if log.key not in temp_streams:
-                stream = Stream(log.labels)
-                temp_streams[log.key] = stream
+            while not self.buffer.empty():
+                e = self.buffer.get()
+                if e.level not in streams:
+                    full_labels = { 
+                        "level": e.level,
+                        **self.labels
+                    }
+                    stream = Stream(full_labels)
+                    streams[e.level] = stream
+                streams[e.level].append(LogEntry(e.timestamp, e.message))
 
-            temp_streams[log.key].appendValue(log.line)
-
-        if temp_streams:
-            streams = Streams(temp_streams.values())
-            self.request.send(streams.serialize())
-
-    def write(self, message):
-        self.emit(message.record)
-
-    def _put(self, log_record):
-        labels = self.labels
-        self.buffer.put(LogLine(labels, log_record))
+            if streams:
+                request = LokiRequest(streams.values())
+                self.loki_client.send(request)
 
 
-class LogLine:
-    def __init__(self, labels, line):
-        self.labels = labels
-        self.key = self.key_from_lables(labels)
-        self.line = line
 
-    def key_from_lables(self, labels):
-        key_list = sorted(labels.keys())
-        return "_".join(key_list)

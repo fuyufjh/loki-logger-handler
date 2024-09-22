@@ -1,11 +1,13 @@
 import traceback
+import logging
+import json
+from . import Formatter
 
-
-class LoguruFormatter:
+class LoguruFormatter(Formatter):
     def __init__(self):
         pass
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         formatted = {
             "message": record.get("message"),
             "timestamp": record.get("time").timestamp(),
@@ -35,4 +37,4 @@ class LoguruFormatter:
                 )
                 formatted["stacktrace"] = "".join(formatted_traceback)
 
-        return formatted
+        return json.dumps(formatted)
