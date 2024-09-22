@@ -2,7 +2,6 @@ import queue
 import unittest
 from unittest.mock import patch, MagicMock
 import logging
-from loki_logger_handler.formatters.plain_formatter import PlainFormatter
 from loki_logger_handler.loki_client import LokiClient
 from loki_logger_handler.loki_logger_handler import LokiLoggerHandler, BufferEntry
 from loki_logger_handler.models import Stream, LokiRequest, LogEntry
@@ -18,16 +17,22 @@ class TestLokiLoggerHandler(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.handler.labels, self.labels)
         self.assertEqual(self.handler.timeout, 10)
-        self.assertIsInstance(self.handler.logger_formatter, PlainFormatter)
+        self.assertIsInstance(self.handler.formatter, logging.Formatter)
         self.assertIsInstance(self.handler.loki_client, LokiClient)
         self.assertIsInstance(self.handler.buffer, queue.Queue)
 
     @patch('loki_logger_handler.loki_logger_handler.BufferEntry')
     def test_emit(self, mock_buffer_entry):
-        record = MagicMock(spec=logging.LogRecord)
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.INFO,
+            pathname="test_file.py",
+            lineno=42,
+            msg="Test message",
+            args=(),
+            exc_info=None,
+        )
         record.created = 1234567890.0
-        record.levelname = "INFO"
-        record.getMessage.return_value = "Test message"
 
         with patch.object(self.handler.buffer, 'put') as mock_put:
             self.handler.emit(record)

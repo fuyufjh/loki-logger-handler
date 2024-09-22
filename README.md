@@ -40,6 +40,7 @@ custom_handler = LokiLoggerHandler(
     labels={"application": "Test", "envornment": "Develop"},
     timeout=10,
     auth=(os.environ["LOKI_USER_ID"], os.environ["LOKI_API_KEY"])
+    # formatter=JsonFormatter(),
 )
 logger.addHandler(custom_handler)
 
@@ -54,10 +55,10 @@ except Exception as e:
 
 ## Messages samples
 
-### PlainFormatter
+### Default formatter
 
 ```
-2024-09-22 20:14:49.245   sample message with args test 42
+sample message with args test 42
 ```
 
 with fields:
@@ -68,7 +69,17 @@ with fields:
 | envornment  | Develop |
 | level       | INFO    |
 
-### JsonFormatter
+### Default formatter with exception
+
+```
+exception message
+Traceback (most recent call last):
+  File "/home/eric/loki-logger-handler/example.py", line 32, in <module>
+    raise Exception("test exception")
+Exception: test exception
+```
+
+### Json Formatter
 
 ```json
 {
@@ -83,7 +94,7 @@ with fields:
 }
 ```
 
-### JsonFormatter with exception
+### Json Formatter with exception
 
 ```json
 {
