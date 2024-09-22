@@ -41,8 +41,8 @@ class LokiRequest:
         return json.dumps(self, cls=_LokiRequestEncoder)
 
 
-class _LokiRequestEncoder(json.JSONEncoder):
+class _LokiRequestEncoder(_StreamEncoder):
     def default(self, obj):
         if isinstance(obj, LokiRequest):
-            return {"streams": [stream.__dict__ for stream in obj.streams]}
-        return json.JSONEncoder.default(self, obj)
+            return {"streams": [self.default(stream) for stream in obj.streams]}
+        return super().default(obj)
