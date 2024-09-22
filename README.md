@@ -20,7 +20,7 @@ A logging handler that sends log messages to Loki in text or JSON format.
 
 ## Formatters
 
-* `PlainFormatter`: Formater for logging the message text.
+* `logging.Formatter`: Formater for logging the message text. (default)
 * `JsonFormatter`: Formater for logging the message and additional fields as JSON.
 
 ## Quick start

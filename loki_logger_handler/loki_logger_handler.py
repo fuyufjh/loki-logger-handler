@@ -3,7 +3,6 @@ import threading
 import time
 import logging
 import atexit
-from loki_logger_handler.formatters.plain_formatter import PlainFormatter
 from loki_logger_handler.loki_client import LokiClient
 from loki_logger_handler.models import Stream, LokiRequest, LogEntry
 from typing import Optional, Tuple, override
@@ -24,7 +23,7 @@ class LokiLoggerHandler(logging.Handler):
         labels: Dict[str, str],
         timeout=10,
         compressed=True,
-        formatter=PlainFormatter(),
+        formatter=logging.Formatter(),
         auth: Optional[Tuple[str, str]] = None,
         additional_headers=dict()
     ):
@@ -44,7 +43,7 @@ class LokiLoggerHandler(logging.Handler):
 
     @override
     def emit(self, record: logging.LogRecord):
-        self.buffer.put(BufferEntry(record.created, record.levelname, self.formatter.format(record)))
+        self.buffer.put(BufferEntry(record.created, record.levelname, self.format(record)))
 
     def flush_loop(self):
         while True:
