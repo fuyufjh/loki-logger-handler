@@ -21,21 +21,21 @@ class LokiHandler(logging.Handler):
         self,
         url,
         labels: Dict[str, str],
-        timeout=10,
+        buffer_timeout=10,
+        buffer_size_threshold=10000,
         compressed=True,
         formatter=logging.Formatter(),
         auth: Optional[Tuple[str, str]] = None,
         additional_headers=dict(),
-        buffer_size_threshold=10000
     ):
         super().__init__()
 
         self.labels = labels
-        self.timeout = timeout
+        self.buffer_timeout = buffer_timeout
+        self.buffer_size_threshold = buffer_size_threshold
         self.formatter = formatter
         self.loki_client = LokiClient(url=url, compressed=compressed, auth=auth, additional_headers=additional_headers)
         self.buffer: queue.Queue[BufferEntry] = queue.Queue()
-        self.buffer_size_threshold = buffer_size_threshold
 
         self.flush_lock = threading.Lock()
         self.flush_condition = threading.Condition(self.flush_lock)
@@ -54,7 +54,7 @@ class LokiHandler(logging.Handler):
     def flush_loop(self):
         while True:
             with self.flush_condition:
-                self.flush_condition.wait(self.timeout)
+                self.flush_condition.wait(self.buffer_timeout)
                 if not self.buffer.empty():
                     self.flush()
 

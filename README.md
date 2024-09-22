@@ -14,7 +14,7 @@ A logging handler that sends log messages to Loki in text or JSON format.
 * `url` (str): The URL of the Loki server.
 * `labels` (dict): A dictionary of labels to attach to each log message.
 * `auth` (tuple, optional): A tuple of user id and api key. Defaults to None.
-* `timeout` (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
+* `buffer_timeout` (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
 * `buffer_size_threshold` (int, optional): The number of log messages to buffer before flushing. Defaults to 10000.
 * `compressed` (bool, optional): Whether to compress the log messages before sending them to Loki. Defaults to `True`.
 * `defaultFormatter` (logging.Formatter, optional): The formatter to use for log messages. Defaults to `PlainFormatter`.
@@ -39,9 +39,10 @@ logger.setLevel(logging.DEBUG)
 custom_handler = LokiLoggerHandler(
     url=os.environ["LOKI_URL"],
     labels={"application": "Test", "envornment": "Develop"},
-    timeout=10,
-    auth=(os.environ["LOKI_USER_ID"], os.environ["LOKI_API_KEY"])
+    auth=(os.environ["LOKI_USER_ID"], os.environ["LOKI_API_KEY"]),
     # formatter=JsonFormatter(),
+    # buffer_timeout=10,
+    # buffer_size_threshold=10000,
 )
 logger.addHandler(custom_handler)
 

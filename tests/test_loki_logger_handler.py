@@ -16,7 +16,7 @@ class TestLokiLoggerHandler(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.handler.labels, self.labels)
-        self.assertEqual(self.handler.timeout, 10)
+        self.assertEqual(self.handler.buffer_timeout, 10)
         self.assertIsInstance(self.handler.formatter, logging.Formatter)
         self.assertIsInstance(self.handler.loki_client, LokiClient)
         self.assertIsInstance(self.handler.buffer, queue.Queue)
