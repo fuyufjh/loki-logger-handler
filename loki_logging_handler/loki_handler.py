@@ -25,7 +25,8 @@ class LokiHandler(logging.Handler):
         compressed=True,
         formatter=logging.Formatter(),
         auth: Optional[Tuple[str, str]] = None,
-        additional_headers=dict()
+        additional_headers=dict(),
+        buffer_size_threshold=10000
     ):
         super().__init__()
 
@@ -34,8 +35,10 @@ class LokiHandler(logging.Handler):
         self.formatter = formatter
         self.loki_client = LokiClient(url=url, compressed=compressed, auth=auth, additional_headers=additional_headers)
         self.buffer: queue.Queue[BufferEntry] = queue.Queue()
+        self.buffer_size_threshold = buffer_size_threshold
 
         self.flush_lock = threading.Lock()
+        self.flush_condition = threading.Condition(self.flush_lock)
         self.flush_thread = threading.Thread(target=self.flush_loop, daemon=True)
         self.flush_thread.start()
 
@@ -44,32 +47,31 @@ class LokiHandler(logging.Handler):
     @override
     def emit(self, record: logging.LogRecord):
         self.buffer.put(BufferEntry(record.created, record.levelname, self.format(record)))
+        if self.buffer.qsize() >= self.buffer_size_threshold:
+            with self.flush_condition:
+                self.flush_condition.notify()
 
     def flush_loop(self):
         while True:
-            if not self.buffer.empty():                
-                self.flush()
-            else:
-                time.sleep(self.timeout)
+            with self.flush_condition:
+                self.flush_condition.wait(self.timeout)
+                if not self.buffer.empty():
+                    self.flush()
 
     def flush(self):
-        with self.flush_lock:
-            streams: Dict[str, Stream] = dict() # log level -> stream
+        streams: Dict[str, Stream] = dict() # log level -> stream
 
-            while not self.buffer.empty():
-                e = self.buffer.get()
-                if e.level not in streams:
-                    full_labels = { 
-                        "level": e.level,
-                        **self.labels
-                    }
-                    stream = Stream(full_labels)
-                    streams[e.level] = stream
-                streams[e.level].append(LogEntry(e.timestamp, e.message))
+        while not self.buffer.empty():
+            e = self.buffer.get()
+            if e.level not in streams:
+                full_labels = { 
+                    "level": e.level,
+                    **self.labels
+                }
+                stream = Stream(full_labels)
+                streams[e.level] = stream
+            streams[e.level].append(LogEntry(e.timestamp, e.message))
 
-            if streams:
-                request = LokiRequest(streams.values())
-                self.loki_client.send(request)
-
-
-
+        if streams:
+            request = LokiRequest(streams.values())
+            self.loki_client.send(request)
