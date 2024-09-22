@@ -29,7 +29,6 @@ class TestLokiLoggerHandler(unittest.TestCase):
         handler = LokiLoggerHandler(
             url="your_url",
             labels={"application": "Test", "envornment": "Develop"},
-            labelKeys={},
             defaultFormatter=mock_formatter,
         )
         # Act
@@ -45,7 +44,6 @@ class TestLokiLoggerHandler(unittest.TestCase):
         loki = LokiLoggerHandler(
             url="your_url",
             labels={"application": "Test", "envornment": "Develop"},
-            labelKeys={},
         )
 
         # Act/Assert
@@ -86,7 +84,6 @@ class TestLokiLoggerHandler(unittest.TestCase):
         handler = LokiLoggerHandler(
             url="your_url",
             labels={"application": "Test", "envornment": "Develop"},
-            labelKeys={},
             defaultFormatter=mock_formatter,
         )
 
@@ -116,7 +113,6 @@ class TestLokiLoggerHandler(unittest.TestCase):
         handler = LokiLoggerHandler(
             url="your_url",
             labels={"application": "Test", "envornment": "Develop"},
-            labelKeys={},
         )
 
         mock_queue = Mock()
@@ -147,7 +143,6 @@ class TestLokiLoggerHandler(unittest.TestCase):
         handler = LokiLoggerHandler(
             url="your_url",
             labels={"application": "Test", "envornment": "Develop"},
-            labelKeys={"function"},
         )
 
         mock_queue = Mock()

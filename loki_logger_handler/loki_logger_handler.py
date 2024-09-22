@@ -15,7 +15,6 @@ class LokiLoggerHandler(logging.Handler):
         self,
         url,
         labels,
-        labelKeys=None,
         timeout=10,
         compressed=True,
         defaultFormatter=LoggerFormatter(),
@@ -23,11 +22,7 @@ class LokiLoggerHandler(logging.Handler):
     ):
         super().__init__()
 
-        if labelKeys is None:
-            labelKeys = {}
-
         self.labels = labels
-        self.labelKeys = labelKeys
         self.timeout = timeout
         self.logger_formatter = defaultFormatter
         self.request = LokiRequest(url=url, compressed=compressed, additional_headers=additional_headers)
@@ -70,11 +65,6 @@ class LokiLoggerHandler(logging.Handler):
 
     def _put(self, log_record):
         labels = self.labels
-
-        for key in self.labelKeys:
-            if key in log_record.keys():
-                labels[key] = log_record[key]
-
         self.buffer.put(LogLine(labels, log_record))
 
 

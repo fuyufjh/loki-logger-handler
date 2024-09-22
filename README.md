@@ -15,7 +15,6 @@ A logging handler that sends log messages to Loki in JSON format
 
 * url (str): The URL of the Loki server.
 * labels (dict): A dictionary of labels to attach to each log message.
-* labelKeys (dict, optional): A dictionary of keys to extract from each log message and use as labels. Defaults to None.
 * timeout (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
 * compressed (bool, optional): Whether to compress the log messages before sending them to Loki. Defaults to True.
 * defaultFormatter (logging.Formatter, optional): The formatter to use for log messages. Defaults to LoggerFormatter().
@@ -40,7 +39,6 @@ logger.setLevel(logging.DEBUG)
 custom_handler = LokiLoggerHandler(
     url=os.environ["LOKI_URL"],
     labels={"application": "Test", "envornment": "Develop"},
-    labelKeys={},
     timeout=10,
 )
 # Create an instance of the custom handler
@@ -64,7 +62,6 @@ os.environ["LOKI_URL"]="https://USER:PASSWORD@logs-prod-eu-west-0.grafana.net/lo
 custom_handler = LokiLoggerHandler(
     url=os.environ["LOKI_URL"],
     labels={"application": "Test", "envornment": "Develop"},
-    labelKeys={},
     timeout=10,
     defaultFormatter=LoguruFormatter(),
 )
