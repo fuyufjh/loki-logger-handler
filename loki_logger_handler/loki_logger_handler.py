@@ -6,7 +6,7 @@ import atexit
 from loki_logger_handler.formatters.plain_formatter import PlainFormatter
 from loki_logger_handler.loki_client import LokiClient
 from loki_logger_handler.models import Stream, LokiRequest, LogEntry
-from typing import override
+from typing import Optional, Tuple, override
 from typing import Dict
 
 
@@ -21,10 +21,11 @@ class LokiLoggerHandler(logging.Handler):
     def __init__(
         self,
         url,
-        labels,
+        labels: Dict[str, str],
         timeout=10,
         compressed=True,
         defaultFormatter=PlainFormatter(),
+        auth: Optional[Tuple[str, str]] = None,
         additional_headers=dict()
     ):
         super().__init__()
@@ -32,9 +33,9 @@ class LokiLoggerHandler(logging.Handler):
         self.labels = labels
         self.timeout = timeout
         self.logger_formatter = defaultFormatter
-        self.loki_client = LokiClient(url=url, compressed=compressed, additional_headers=additional_headers)
+        self.loki_client = LokiClient(url=url, compressed=compressed, auth=auth, additional_headers=additional_headers)
         self.buffer: queue.Queue[BufferEntry] = queue.Queue()
-        
+
         self.flush_lock = threading.Lock()
         self.flush_thread = threading.Thread(target=self.flush_loop, daemon=True)
         self.flush_thread.start()

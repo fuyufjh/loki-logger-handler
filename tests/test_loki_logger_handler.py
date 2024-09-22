@@ -12,7 +12,8 @@ class TestLokiLoggerHandler(unittest.TestCase):
     def setUp(self):
         self.url = "http://loki.example.com"
         self.labels = {"app": "test_app", "environment": "testing"}
-        self.handler = LokiLoggerHandler(self.url, self.labels)
+        self.auth = ("test_user_id", "test_api_key")
+        self.handler = LokiLoggerHandler(self.url, self.labels, auth=self.auth)
 
     def test_init(self):
         self.assertEqual(self.handler.labels, self.labels)
@@ -77,6 +78,14 @@ class TestLokiLoggerHandler(unittest.TestCase):
         with patch('loki_logger_handler.loki_logger_handler.LokiClient.send') as mock_send:
             self.handler.flush()
             mock_send.assert_not_called()
+
+    def test_init_with_auth(self):
+        handler = LokiLoggerHandler(self.url, self.labels, auth=self.auth)
+        self.assertEqual(handler.loki_client.headers["Authorization"], f"Bearer {self.auth[0]}:{self.auth[1]}")
+
+    def test_init_without_auth(self):
+        handler = LokiLoggerHandler(self.url, self.labels)
+        self.assertNotIn("Authorization", handler.loki_client.headers)
 
 if __name__ == '__main__':
     unittest.main()
