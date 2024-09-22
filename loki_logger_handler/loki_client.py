@@ -21,7 +21,7 @@ class LokiClient:
         try:
             if self.compressed:
                 self.headers["Content-Encoding"] = "gzip"
-                request = gzip.compress(bytes(request, "utf-8"))
+                request = gzip.compress(bytes(request.serialize(), "utf-8"))
 
             response = self.session.post(self.url, data=request, headers=self.headers)
             response.raise_for_status()

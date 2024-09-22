@@ -66,9 +66,9 @@ class TestLokiLoggerHandler(unittest.TestCase):
 
         expected_serialized = (
             '{"streams": ['
-            '{"labels": {"level": "INFO", "app": "test_app", "environment": "testing"}, '
+            '{"stream": {"level": "INFO", "app": "test_app", "environment": "testing"}, '
             '"values": [["1234567890000000000", "Test message 1"]]}, '
-            '{"labels": {"level": "ERROR", "app": "test_app", "environment": "testing"}, '
+            '{"stream": {"level": "ERROR", "app": "test_app", "environment": "testing"}, '
             '"values": [["1234567891000000000", "Test message 2"]]}'
             ']}'
         )

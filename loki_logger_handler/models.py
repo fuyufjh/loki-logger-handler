@@ -26,7 +26,7 @@ class _StreamEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Stream):
             return {
-                "labels": obj.labels,
+                "stream": obj.labels,
                 "values": [[str(int(entry.timestamp * 1e9)), entry.message] for entry in obj.values]
             }
         return json.JSONEncoder.default(self, obj)
