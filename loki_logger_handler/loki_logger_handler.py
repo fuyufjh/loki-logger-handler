@@ -24,7 +24,7 @@ class LokiLoggerHandler(logging.Handler):
         labels: Dict[str, str],
         timeout=10,
         compressed=True,
-        defaultFormatter=PlainFormatter(),
+        formatter=PlainFormatter(),
         auth: Optional[Tuple[str, str]] = None,
         additional_headers=dict()
     ):
@@ -32,7 +32,7 @@ class LokiLoggerHandler(logging.Handler):
 
         self.labels = labels
         self.timeout = timeout
-        self.logger_formatter = defaultFormatter
+        self.formatter = formatter
         self.loki_client = LokiClient(url=url, compressed=compressed, auth=auth, additional_headers=additional_headers)
         self.buffer: queue.Queue[BufferEntry] = queue.Queue()
 
@@ -44,7 +44,7 @@ class LokiLoggerHandler(logging.Handler):
 
     @override
     def emit(self, record: logging.LogRecord):
-        self.buffer.put(BufferEntry(record.created, record.levelname, record.getMessage()))
+        self.buffer.put(BufferEntry(record.created, record.levelname, self.formatter.format(record)))
 
     def flush_loop(self):
         while True:

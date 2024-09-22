@@ -1,31 +1,30 @@
 # loki_logger_handler
 
-A logging handler that sends log messages to Loki in JSON format
+A logging handler that sends log messages to Loki in text or JSON format.
 
 ## Features
 
-* Logs pushed in JSON format
-* Custom labels definition
-* Allows defining loguru and logger extra keys as labels
+* Logs pushed in text or JSON format
 * Logger extra keys added automatically as keys into pushed JSON
 * Publish in batch of Streams
-* Publis logs compressed
+* Publish logs compressed
 
 ## Args
 
-* url (str): The URL of the Loki server.
-* labels (dict): A dictionary of labels to attach to each log message.
-* timeout (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
-* compressed (bool, optional): Whether to compress the log messages before sending them to Loki. Defaults to True.
-* defaultFormatter (logging.Formatter, optional): The formatter to use for log messages. Defaults to LoggerFormatter().
+* `url` (str): The URL of the Loki server.
+* `labels` (dict): A dictionary of labels to attach to each log message.
+* `auth` (tuple, optional): A tuple of user id and api key. Defaults to None.
+* `timeout` (int, optional): The time in seconds to wait before flushing the buffer. Defaults to 10.
+* `compressed` (bool, optional): Whether to compress the log messages before sending them to Loki. Defaults to `True`.
+* `defaultFormatter` (logging.Formatter, optional): The formatter to use for log messages. Defaults to `PlainFormatter`.
 
 ## Formatters
-* LoggerFormatter: Formater for default python logging implementation
-* LoguruFormatter: Formater for Loguru python library
 
-## How to use 
+* `PlainFormatter`: Formater for logging the message text.
+* `JsonFormatter`: Formater for logging the message and additional fields as JSON.
 
-### Logger
+## Quick start
+
 ```python
 from loki_logger_handler.loki_logger_handler import LokiLoggerHandler,
 import logging
@@ -40,106 +39,65 @@ custom_handler = LokiLoggerHandler(
     url=os.environ["LOKI_URL"],
     labels={"application": "Test", "envornment": "Develop"},
     timeout=10,
+    auth=(os.environ["LOKI_USER_ID"], os.environ["LOKI_API_KEY"])
 )
-# Create an instance of the custom handler
-
 logger.addHandler(custom_handler)
-logger.debug("Debug message", extra={'custom_field': 'custom_value'})
 
-
+logger.info("sample message with args %s %d", "test", 42)
+logger.info("sample message with extra", extra={'custom_field': 'custom_value'})
+logger.error("error message")
+try:
+    raise Exception("test exception")
+except Exception as e:
+    logger.exception("exception message")
 ```
 
+## Messages samples
 
-### Loguru
+### PlainFormatter
 
-```python
-from loki_logger_handler.loki_logger_handler import LokiLoggerHandler, LoguruFormatter
-from loguru import logger
-import os 
-
-os.environ["LOKI_URL"]="https://USER:PASSWORD@logs-prod-eu-west-0.grafana.net/loki/api/v1/push"
-
-custom_handler = LokiLoggerHandler(
-    url=os.environ["LOKI_URL"],
-    labels={"application": "Test", "envornment": "Develop"},
-    timeout=10,
-    defaultFormatter=LoguruFormatter(),
-)
-logger.configure(handlers=[{"sink": custom_handler, "serialize": True}])
-
-logger.info(
-    "Response code {code} HTTP/1.1 GET {url}", code=200, url="https://loki_handler.io"
-)
+```
+2024-09-22 20:14:49.245   sample message with args test 42
 ```
 
-## Loki messages samples
+with fields:
 
-### Without extra
+| Field       | Value   |
+|-------------|---------|
+| application | Test    |
+| envornment  | Develop |
+| level       | INFO    |
+
+### JsonFormatter
 
 ```json
 {
-  "message": "Starting service",
-  "timestamp": 1681638266.542849,
-  "process": 48906,
-  "thread": 140704422327936,
-  "function": "run",
-  "module": "test",
-  "name": "__main__"
+  "message": "sample message test 42",
+  "timestamp": 1727007836.0348141,
+  "thread": 140158402386816,
+  "function": "<module>",
+  "module": "example",
+  "logger": "custom_logger",
+  "level": "INFO",
+  "exc_text": null
 }
-
 ```
 
-### With extra
+### JsonFormatter with exception
 
 ```json
 {
-  "message": "Response code  200 HTTP/1.1 GET https://loki_handler.io",
-  "timestamp": 1681638225.877143,
-  "process": 48870,
-  "thread": 140704422327936,
-  "function": "run",
-  "module": "test",
-  "name": "__main__",
-  "code": 200,
-  "url": "https://loki_handler.io"
+  "message": "exception message",
+  "timestamp": 1727007836.0350208,
+  "thread": 140158402386816,
+  "function": "<module>",
+  "module": "example",
+  "logger": "custom_logger",
+  "level": "ERROR",
+  "exc_text": null,
+  "file": "example.py",
+  "path": "/home/eric/loki-logger-handler/example.py",
+  "line": 27,
+  "stacktrace": "Traceback (most recent call last):\n  File \"/home/eric/loki-logger-handler/example.py\", line 25, in <module>\n    raise Exception(\"test exception\")\nException: test exception\n"
 }
 ```
-
-### Exceptions
-
-```json
-{
-  "message": "name 'plan' is not defined",
-  "timestamp": 1681638284.358464,
-  "process": 48906,
-  "thread": 140704422327936,
-  "function": "run",
-  "module": "test",
-  "name": "__main__",
-  "file": "test.py",
-  "path": "/test.py",
-  "line": 39
-}
-```
-
-## Loki Query Sample
-
-Loki query sample :
-
- ```
- {envornment="Develop"} |= `` | json
- ```
-
-Filter by level:
-
-```
-{envornment="Develop", level="INFO"} |= `` | json
-```
-Filter by extra:
-
-```
-{envornment="Develop", level="INFO"} |= `` | json | code=`200`
-```
-
-## License
-The MIT License
