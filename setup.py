@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 # Read the contents of your README file
 with open("README.md", "r", encoding="utf-8") as f:
@@ -6,13 +6,13 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="loki-logging-handler",
-    version="0.0.3",
+    version="0.0.5",
     author="Eric Fu",
     description="Logging handler to send logs to Grafana Loki",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/fuyufjh/loki_logging_handler",
-    packages=["loki_logging_handler"],
+    packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
